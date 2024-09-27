@@ -1,4 +1,4 @@
-# airtop-recipe-template
+# Recipe: Summarize a webpage with Airtop
 
 ## Overview
 
