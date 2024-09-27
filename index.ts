@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import puppeteer from 'puppeteer';
+import puppeteer, { Browser, Page } from 'puppeteer';
 import { AirtopClient, AirtopError } from '@airtop/sdk';
 
 const AIRTOP_API_KEY = process.env.AIRTOP_API_KEY;
@@ -7,48 +7,33 @@ const AIRTOP_API_KEY = process.env.AIRTOP_API_KEY;
 async function run() {
   try {
     const client = new AirtopClient({
-      airtopToken: AIRTOP_API_KEY,
+      apiKey: AIRTOP_API_KEY,
     });
-    const createSessionResponse = await client.sessions.post({
+    const createSessionResponse = await client.sessions.create({
       configuration: {
-        timeout: 5, // terminate session after 5 minutes
+        timeoutMinutes: 5,
       },
     });
-    let sessionStatus = createSessionResponse.session.status;
-    console.log('Created airtop session.  Status:', sessionStatus);
 
+    const sessionId = createSessionResponse.data.id;
+    console.log('Created airtop session', sessionId);
 
-    // Wait for session to start
-    if (sessionStatus !== 'running') {
-      for (let i = 0; i < 10; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        const updatedSession = await client.sessions.get(createSessionResponse.session.id);
-        sessionStatus = updatedSession.session.status;
-        if (updatedSession.session.status === 'running') {
-          break;
-        }
-      }
-    }
-
-    if (sessionStatus !== 'running') {
-      throw new Error('Session did not start');
-    }
-    if (!createSessionResponse.connectionInfo?.cdpWsUrl) {
+    if (!createSessionResponse.data.cdpWsUrl) {
       throw new Error('Unable to get cdp url');
     }
 
     // Connect to the browser
-    const cdpUrl = createSessionResponse.connectionInfo?.cdpWsUrl;
-    const browser = await puppeteer.connect({
+    const cdpUrl = createSessionResponse.data.cdpWsUrl;
+    const browser: Browser = await puppeteer.connect({
       browserWSEndpoint: cdpUrl,
       headers: {
-        'x-airtop-token': AIRTOP_API_KEY || '',
+        Authorization: `Bearer ${AIRTOP_API_KEY}` || '',
       },
     });
     console.log('Connected to browser');
 
     // Open a new page
-    const page = await browser.newPage();
+    const page: Page = await browser.newPage();
     
     /**
      * YOUR CODE HERE
@@ -58,7 +43,7 @@ async function run() {
 
     // Clean up
     await browser.close();
-    await client.sessions.delete(createSessionResponse.session.id);
+    await client.sessions.terminate(sessionId);
     console.log('Session deleted');
     process.exit(0);
   } catch (err) {
