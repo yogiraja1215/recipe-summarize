@@ -17,8 +17,8 @@ async function run() {
       },
     });
 
-    const sessionId = createSessionResponse.data.id;
-    console.log('Created airtop session', sessionId);
+    const session = createSessionResponse.data;
+    console.log('Created airtop session', session.id);
 
     if (!createSessionResponse.data.cdpWsUrl) {
       throw new Error('Unable to get cdp url');
@@ -40,7 +40,7 @@ async function run() {
     // Navigate to the URL
     console.log('Navigating to URL', TARGET_URL);
     await page.goto(TARGET_URL);
-    const windowInfo = await client.windows.getWindowInfoForPuppeteerPage(sessionId, page, {
+    const windowInfo = await client.windows.getWindowInfoForPuppeteerPage(session, page, {
       disableResize: true, // Prevents the browser window from being resized when loading a live view, which might impact the agent's ability to scrape or summarize content
     }); 
     
@@ -48,12 +48,12 @@ async function run() {
     const windowId = windowInfo.data.windowId;
 
     console.log('Summarizing content...');
-    const contentSummary = await client.windows.summarizeContent(sessionId, windowId, { prompt: 'Summarize the content of the page in 1 paragraph' }); // Note that scrapeContent is also available to do a clean scrape of the page content
+    const contentSummary = await client.windows.summarizeContent(session.id, windowId, { prompt: 'Summarize the content of the page in 1 paragraph' }); // Note that scrapeContent is also available to do a clean scrape of the page content
     console.log('Content summary:\n\n', chalk.green(contentSummary.data.modelResponse));
 
     // Clean up
     await browser.close();
-    await client.sessions.terminate(sessionId);
+    await client.sessions.terminate(session.id);
     console.log(chalk.red('\nSession terminated'));
     process.exit(0);
   } catch (err) {
