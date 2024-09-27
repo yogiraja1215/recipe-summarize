@@ -1,8 +1,10 @@
 import 'dotenv/config';
 import puppeteer, { Browser, Page } from 'puppeteer';
 import { AirtopClient, AirtopError } from '@airtop/sdk';
+import chalk from 'chalk';
 
 const AIRTOP_API_KEY = process.env.AIRTOP_API_KEY;
+const TARGET_URL = 'https://en.wikipedia.org/wiki/A.I._Artificial_Intelligence'; // URL to scrape or summarize
 
 async function run() {
   try {
@@ -35,16 +37,24 @@ async function run() {
     // Open a new page
     const page: Page = await browser.newPage();
     
-    /**
-     * YOUR CODE HERE
-     * 
-     * Use the browser instance to navigate to a URL, scrape data, and more.
-     */
+    // Navigate to the URL
+    console.log('Navigating to URL', TARGET_URL);
+    await page.goto(TARGET_URL);
+    const windowInfo = await client.windows.getWindowInfoForPuppeteerPage(sessionId, page, {
+      disableResize: true, // Prevents the browser window from being resized when loading a live view, which might impact the agent's ability to scrape or summarize content
+    }); 
+    
+    console.log('See a live view of the browser window at', chalk.blueBright(windowInfo.data.liveViewUrl));
+    const windowId = windowInfo.data.windowId;
+
+    console.log('Summarizing content...');
+    const contentSummary = await client.windows.summarizeContent(sessionId, windowId); // Note that scrapeContent is also available to do a clean scrape of the page content
+    console.log('Content summary:\n\n', chalk.green(contentSummary.data.modelResponse));
 
     // Clean up
     await browser.close();
     await client.sessions.terminate(sessionId);
-    console.log('Session deleted');
+    console.log(chalk.red('\nSession terminated'));
     process.exit(0);
   } catch (err) {
     if (err instanceof AirtopError) {
