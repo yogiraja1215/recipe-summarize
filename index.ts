@@ -1,5 +1,6 @@
 import 'dotenv/config';
-import puppeteer, { Browser, Page } from 'puppeteer';
+import puppeteer from 'puppeteer';
+import type { Browser, Page } from 'puppeteer';
 import { AirtopClient, AirtopError } from '@airtop/sdk';
 import chalk from 'chalk';
 
@@ -7,6 +8,9 @@ const AIRTOP_API_KEY = process.env.AIRTOP_API_KEY;
 const TARGET_URL = 'https://en.wikipedia.org/wiki/A.I._Artificial_Intelligence'; // URL to scrape or summarize
 
 async function run() {
+  if (!AIRTOP_API_KEY) {
+    throw new Error('AIRTOP_API_KEY is not set');
+  }
   try {
     const client = new AirtopClient({
       apiKey: AIRTOP_API_KEY,
