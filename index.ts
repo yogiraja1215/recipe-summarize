@@ -52,7 +52,7 @@ async function run() {
     const windowId = windowInfo.data.windowId;
 
     console.log('Summarizing content...');
-    const contentSummary = await client.windows.summarizeContent(session.id, windowId, { prompt: 'Summarize the content of the page in 1 paragraph' }); // Note that scrapeContent is also available to do a clean scrape of the page content
+    const contentSummary = await client.windows.promptContent(session.id, windowId, { prompt: 'Summarize the content of the page in 1 paragraph' }); // Note that scrapeContent is also available to do a clean scrape of the page content
     console.log('Content summary:\n\n', chalk.green(contentSummary.data.modelResponse));
 
     // Clean up
