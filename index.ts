@@ -33,7 +33,9 @@ async function run() {
       { url: TARGET_URL }
     );
 
-    const windowInfo = await client.windows.getWindowInfo(sessionId, windowResponse.data.windowId);
+    const windowInfo = await client.windows.getWindowInfo(sessionId, windowResponse.data.windowId, {
+      disableResize: true, // Prevents the browser window from being resized when loading a live view, which might impact the agent's ability to scrape or summarize content
+    });
     
     console.log('See a live view of the browser window at', chalk.blueBright(windowInfo.data.liveViewUrl));
     const windowId = windowInfo.data.windowId;
