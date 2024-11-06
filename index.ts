@@ -33,9 +33,7 @@ async function run() {
       { url: TARGET_URL }
     );
 
-    const windowInfo = await client.windows.getWindowInfo(sessionId, windowResponse.data.windowId, {
-      disableResize: true, // Prevents the browser window from being resized when loading a live view, which might impact the agent's ability to scrape or summarize content
-    });
+    const windowInfo = await client.windows.getWindowInfo(sessionId, windowResponse.data.windowId);
     
     console.log('See a live view of the browser window at', chalk.blueBright(windowInfo.data.liveViewUrl));
     const windowId = windowInfo.data.windowId;
@@ -44,7 +42,8 @@ async function run() {
     const contentSummary = await client.windows.promptContent(sessionId, windowId, { prompt: 'Summarize the content of the page in 1 paragraph' }); // Note that scrapeContent is also available to do a clean scrape of the page content
     console.log('Content summary:\n\n', chalk.green(contentSummary.data.modelResponse));
 
-    // Clean up
+    // Clean up. Comment out the next two lines if you want to access the live view after the script completes.
+    await client.windows.close(sessionId, windowId);
     await client.sessions.terminate(sessionId);
     console.log(chalk.red('\nSession terminated'));
     process.exit(0);
